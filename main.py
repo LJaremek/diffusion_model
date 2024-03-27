@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[33]:
+
+
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
@@ -5,6 +11,12 @@ import torch.optim as optim
 import torch.nn as nn
 import numpy as np
 import torch
+
+from unet import UNet
+# from unet import UNetModified
+
+
+# In[34]:
 
 
 def calc_data_mean_std(
@@ -43,6 +55,9 @@ def calc_data_mean_std(
     }
 
 
+# In[35]:
+
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Device:", device)
 
@@ -52,8 +67,10 @@ print("Device:", device)
 
 
 transform = transforms.Compose([
+    transforms.Resize((128, 128)),  # Przeskalowanie obrazów do większych rozmiarów
+    transforms.Grayscale(num_output_channels=3),  # Konwersja do obrazów 3-kanałowych
     transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
+    transforms.Normalize([0.1307]*3, [0.3081]*3)  # Normalizacja dla 3 kanałów
 ])
 
 train_data = datasets.MNIST(
@@ -63,8 +80,11 @@ test_data = datasets.MNIST(
     root="./data", train=False, download=True, transform=transform
     )
 
-train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
-test_loader = DataLoader(test_data, batch_size=64, shuffle=False)
+train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
+test_loader = DataLoader(test_data, batch_size=16, shuffle=False)
+
+
+# In[36]:
 
 
 class DiffusionModel(nn.Module):
@@ -96,6 +116,9 @@ class EnhancedDiffusionModel(nn.Module):
         x = self.relu(self.fc3(x))
         output = self.fc4(x)
         return output
+
+
+# In[37]:
 
 
 def generate_image(model, start_noise_level=1.0, steps=10, input_dim=784):
@@ -140,14 +163,14 @@ def train(
         loss_history = []
 
         for _, (data, _) in enumerate(data_loader):
-            data = data.view(data.size(0), -1).to(device)
+            data = data.to(device)
 
             max_noise_level = epoch / epochs
             noise_level = np.random.uniform(0, max_noise_level)
             noisy_data = data + noise_level * torch.randn_like(data).to(device)
 
             optimizer.zero_grad()
-            output = model(noisy_data, noise_level)
+            output = model(noisy_data)
             loss = criterion(output, data)
             loss.backward()
 
@@ -159,11 +182,22 @@ def train(
 
         loss_history = np.array(loss_history)
         print(f"Epoch {epoch+1}, Loss {np.mean(loss_history)}")
-
+        
         if show_images_progress:
             display_generated_images(model, images_to_generate)
 
 
-model = EnhancedDiffusionModel(input_dim=784).to(device)
+# In[38]:
 
-train(model, train_loader, epochs=50, show_images_progress=False)
+
+model = UNet(n_channels=3, n_classes=1)
+model.to(device)
+
+train(model, train_loader, epochs=50)
+
+
+# In[ ]:
+
+
+
+
