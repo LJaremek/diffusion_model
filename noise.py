@@ -31,8 +31,6 @@ def add_gaussian_noise(
 
 
 def get_noised_images(image, n: int = 10, noise: float = 0.5) -> list:
-    plt.figure(figsize=(n*5+5, 5))
-
     x_list = [image]
     for _ in range(n-1):
         new_x = add_gaussian_noise(x_list[-1], std=noise)
@@ -42,12 +40,12 @@ def get_noised_images(image, n: int = 10, noise: float = 0.5) -> list:
 
 
 def draw_noise_evolution(
-        images: list,
+        image,
         n: int = 10,
         noise: float = 0.5,
         save_path: str = None
         ) -> None:
-    images = get_noised_images(images, n, noise)
+    images = get_noised_images(image, n, noise)
     plt.figure(figsize=(n*5+5, 5))
 
     plt.subplot(1, n, 1)
