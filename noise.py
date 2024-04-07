@@ -3,6 +3,16 @@ from PIL import Image
 import numpy as np
 
 
+def biased_randint(a: int, b: int, bias: float = 5) -> int:
+    """
+    Lower bias, higher mean of values.
+    """
+    scale = (b - a) / bias
+    num = a + np.random.exponential(scale)
+
+    return min(max(a, int(num)), b)
+
+
 def load_image(image_path: str) -> np.array:
     img = Image.open(image_path)
     return np.array(img).astype(np.float32) / 255.0  # Normalizacja do [0, 1]
