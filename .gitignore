@@ -1,0 +1,10 @@
+# Default
+.vscode
+
+# Data
+/data/*
+!/data/.gitkeep
+
+# model_paths
+/model_paths/*
+!/model_paths/.gitkeep
